@@ -1077,9 +1077,29 @@
             let price = (cost + minFreight) / (1 - commissionRate - taxRate) / (1 - profitRate) / exchangeRate;
             
             // 对于英镑和欧元国家的特殊处理：如果售价 > 150，重新计算
-            if ((isGbpCountry(country) || isEurCountry(country)) && price > 150) {
-              price = (cost + minFreight) / (1 - commissionRate) / (1 - profitRate) / exchangeRate;
-            }
+            const isGbp = isGbpCountry(country);
+            const isEur = isEurCountry(country);
+
+           if (isGbp || isEur) {
+             // 第一次检查：如果售价 > 150，重新计算
+             if (price > 150) {
+              // 重新计算：售价 =（成本+运费）/(1-佣金)/(1-利润率)/汇率
+              const priceWithoutTax = (cost + minFreight) / (1 - commissionRate) / (1 - profitRate) / exchangeRate;
+              // 第二次检查
+               if (priceWithoutTax >= 150) {
+                 // 如果第二次计算仍 ≥150，保持第二次计算结果
+                 price = priceWithoutTax;
+               } else {
+                // 如果第二次计算 <150，使用第一次计算结果
+                 price = price;
+                                 }
+               }
+                         }
+            
+            //之前的售价错误计算逻辑
+            //if ((isGbpCountry(country) || isEurCountry(country)) && price > 150) {
+            //price = (cost + minFreight) / (1 - commissionRate) / (1 - profitRate) / exchangeRate;
+            //}
             
             // 4. 计算利润：利润 = 包裹的售价 × 汇率 - 成本 - 运费
             const profit = price * exchangeRate - cost - minFreight;
